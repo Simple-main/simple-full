@@ -1,18 +1,41 @@
+require("dotenv").config();
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Joi = require('joi');
 const User = require("../../models/User");
 
-//register
+// Hardcoded admin credentials
+const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+// Input validation schema for register and login
+const userSchema = Joi.object({
+  userName: Joi.string().min(3).max(30).required(),
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).required(),
+});
+
+// Register user
 const registerUser = async (req, res) => {
+  const { error } = userSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.details[0].message,
+    });
+  }
+
   const { userName, email, password } = req.body;
 
   try {
     const checkUser = await User.findOne({ email });
-    if (checkUser)
+    if (checkUser) {
       return res.json({
         success: false,
-        message: "User Already exists with the same email! Please try again",
+        message: "User already exists with the same email! Please try again",
       });
+    }
 
     const hashPassword = await bcrypt.hash(password, 12);
     const newUser = new User({
@@ -27,35 +50,66 @@ const registerUser = async (req, res) => {
       message: "Registration successful",
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({
       success: false,
-      message: "Some error occured",
+      message: "An internal server error occurred. Please try again later.",
+      error: e.message,
     });
   }
 };
 
-//login
+// Login user (with admin check)
 const loginUser = async (req, res) => {
+  const { error } = userSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.details[0].message,
+    });
+  }
+
   const { email, password } = req.body;
 
   try {
-    const checkUser = await User.findOne({ email });
-    if (!checkUser)
-      return res.json({
-        success: false,
-        message: "User doesn't exists! Please register first",
-      });
+    // Check if the user is the hardcoded admin
+    if (email === adminEmail && password === adminPassword) {
+      const token = jwt.sign(
+        { email: adminEmail, role: 'admin' },
+        process.env.CLIENT_SECRET_KEY,
+        { expiresIn: "60m", algorithm: "HS256" }
+      );
 
-    const checkPasswordMatch = await bcrypt.compare(
-      password,
-      checkUser.password
-    );
-    if (!checkPasswordMatch)
-      return res.json({
+      // Send JWT in cookie
+      return res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      }).json({
+        success: true,
+        message: "Admin logged in successfully",
+        user: {
+          email: adminEmail,
+          role: 'admin',
+        },
+      });
+    }
+
+    // Check if the user exists in the database
+    const checkUser = await User.findOne({ email });
+    if (!checkUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User doesn't exist! Please register first",
+      });
+    }
+
+    const checkPasswordMatch = await bcrypt.compare(password, checkUser.password);
+    if (!checkPasswordMatch) {
+      return res.status(400).json({
         success: false,
         message: "Incorrect password! Please try again",
       });
+    }
 
     const token = jwt.sign(
       {
@@ -64,11 +118,15 @@ const loginUser = async (req, res) => {
         email: checkUser.email,
         userName: checkUser.userName,
       },
-      "CLIENT_SECRET_KEY",
-      { expiresIn: "60m" }
+      process.env.CLIENT_SECRET_KEY,
+      { expiresIn: "60m", algorithm: "HS256" }
     );
 
-    res.cookie("token", token, { httpOnly: true, secure: false }).json({
+    // Send JWT in cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    }).json({
       success: true,
       message: "Logged in successfully",
       user: {
@@ -79,16 +137,16 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({
       success: false,
-      message: "Some error occured",
+      message: "An internal server error occurred. Please try again later.",
+      error: e.message,
     });
   }
 };
 
-//logout
-
+// Logout user
 const logoutUser = (req, res) => {
   res.clearCookie("token").json({
     success: true,
@@ -96,23 +154,24 @@ const logoutUser = (req, res) => {
   });
 };
 
-//auth middleware
+// Authentication middleware
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
-  if (!token)
+  if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Unauthorised user!",
+      message: "Unauthorized user!",
     });
+  }
 
   try {
-    const decoded = jwt.verify(token, "CLIENT_SECRET_KEY");
+    const decoded = jwt.verify(token, process.env.CLIENT_SECRET_KEY);
     req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({
       success: false,
-      message: "Unauthorised user!",
+      message: "Unauthorized user!",
     });
   }
 };

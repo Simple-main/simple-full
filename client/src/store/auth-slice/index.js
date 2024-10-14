@@ -1,5 +1,11 @@
+
+
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+
+// Hardcoded admin credentials
+const adminEmail =  'admin@example.com';
+const adminPassword =  'admin123';
 
 const initialState = {
   isAuthenticated: false,
@@ -9,7 +15,6 @@ const initialState = {
 
 export const registerUser = createAsyncThunk(
   "/auth/register",
-
   async (formData) => {
     const response = await axios.post(
       "http://localhost:5000/api/auth/register",
@@ -25,8 +30,21 @@ export const registerUser = createAsyncThunk(
 
 export const loginUser = createAsyncThunk(
   "/auth/login",
-
   async (formData) => {
+    const { email, password } = formData;
+
+    // Check for hardcoded admin credentials
+    if (email === adminEmail && password === adminPassword) {
+      return {
+        success: true,
+        user: {
+          email: adminEmail,
+          role: 'admin',
+        },
+      };
+    }
+
+    // If not admin, proceed with API call
     const response = await axios.post(
       "http://localhost:5000/api/auth/login",
       formData,
@@ -41,7 +59,6 @@ export const loginUser = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk(
   "/auth/logout",
-
   async () => {
     const response = await axios.post(
       "http://localhost:5000/api/auth/logout",
@@ -57,7 +74,6 @@ export const logoutUser = createAsyncThunk(
 
 export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
-
   async () => {
     const response = await axios.get(
       "http://localhost:5000/api/auth/check-auth",
@@ -90,7 +106,7 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
       })
-      .addCase(registerUser.rejected, (state, action) => {
+      .addCase(registerUser.rejected, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
@@ -99,13 +115,11 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        console.log(action);
-
         state.isLoading = false;
         state.user = action.payload.success ? action.payload.user : null;
         state.isAuthenticated = action.payload.success;
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(loginUser.rejected, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
@@ -118,12 +132,12 @@ const authSlice = createSlice({
         state.user = action.payload.success ? action.payload.user : null;
         state.isAuthenticated = action.payload.success;
       })
-      .addCase(checkAuth.rejected, (state, action) => {
+      .addCase(checkAuth.rejected, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
       })
-      .addCase(logoutUser.fulfilled, (state, action) => {
+      .addCase(logoutUser.fulfilled, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
