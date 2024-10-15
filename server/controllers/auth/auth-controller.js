@@ -2,18 +2,24 @@ require("dotenv").config();
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Joi = require('joi');
+const Joi = require("joi");
 const User = require("../../models/User");
 
 // Hardcoded admin credentials
 const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
-// Input validation schema for register and login
+// Input validation schema for register
 const userSchema = Joi.object({
   userName: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
+});
+
+// Separate schema for login
+const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().required(),
 });
 
 // Register user
@@ -31,7 +37,7 @@ const registerUser = async (req, res) => {
   try {
     const checkUser = await User.findOne({ email });
     if (checkUser) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "User already exists with the same email! Please try again",
       });
@@ -61,7 +67,7 @@ const registerUser = async (req, res) => {
 
 // Login user (with admin check)
 const loginUser = async (req, res) => {
-  const { error } = userSchema.validate(req.body);
+  const { error } = loginSchema.validate(req.body);
   if (error) {
     return res.status(400).json({
       success: false,
@@ -84,6 +90,7 @@ const loginUser = async (req, res) => {
       return res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        sameSite: 'strict'
       }).json({
         success: true,
         message: "Admin logged in successfully",
@@ -126,6 +133,7 @@ const loginUser = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: 'strict'
     }).json({
       success: true,
       message: "Logged in successfully",
@@ -176,4 +184,28 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = { registerUser, loginUser, logoutUser, authMiddleware };
+// Check authentication status
+const checkAuth = async (req, res) => {
+  // The user object should be attached to the request by the authMiddleware
+  const user = req.user;
+  
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      message: "User not authenticated",
+    });
+  }
+
+  res.json({
+    success: true,
+    message: "User authenticated",
+    user: {
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
+      role: user.role,
+    },
+  });
+};
+
+module.exports = { registerUser, loginUser, logoutUser, authMiddleware, checkAuth };
