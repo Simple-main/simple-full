@@ -1,4 +1,4 @@
-import { StarIcon } from "lucide-react";
+import PropTypes from 'prop-types';
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent } from "../ui/dialog";
@@ -170,7 +170,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             <div className="grid gap-6">
               {reviews && reviews.length > 0 ? (
                 reviews.map((reviewItem) => (
-                  <div className="flex gap-4">
+                  <div key={reviewItem._id} className="flex gap-4">
                     <Avatar className="w-10 h-10 border">
                       <AvatarFallback>
                         {reviewItem?.userName[0].toUpperCase()}
@@ -220,5 +220,18 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
     </Dialog>
   );
 }
+ProductDetailsDialog.propTypes = {
+  open: PropTypes.bool.isRequired,
+  setOpen: PropTypes.func.isRequired,
+  productDetails: PropTypes.shape({
+    _id: PropTypes.string,
+    image: PropTypes.string,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    price: PropTypes.number,
+    salePrice: PropTypes.number,
+    totalStock: PropTypes.number,
+  }),
+};
 
 export default ProductDetailsDialog;

@@ -2,8 +2,13 @@ import { AlignJustify, LogOut } from "lucide-react";
 import { Button } from "../ui/button";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "@/store/auth-slice";
+import PropTypes from 'prop-types';
+import UserCartWrapper from './cart-wrapper'; // Assuming the UserCartWrapper is in the correct path
 
 function AdminHeader({ setOpen }) {
+  AdminHeader.propTypes = {
+    setOpen: PropTypes.func.isRequired,
+  };
   const dispatch = useDispatch();
 
   function handleLogout() {
@@ -29,4 +34,18 @@ function AdminHeader({ setOpen }) {
   );
 }
 
-export default AdminHeader;
+const HeaderRightContent = ({ cartItems }) => {
+  return (
+    <div>
+      <UserCartWrapper cartItems={cartItems} />
+    </div>
+  );
+};
+
+// PropTypes validation for cartItems
+HeaderRightContent.propTypes = {
+  cartItems: PropTypes.array.isRequired,
+};
+
+// Exporting both components
+export { AdminHeader, HeaderRightContent };

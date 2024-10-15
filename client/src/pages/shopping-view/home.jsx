@@ -31,6 +31,7 @@ import { useToast } from "@/components/ui/use-toast";
 import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import { getFeatureImages } from "@/store/common-slice";
 
+// Categories and Brands with icons
 const categoriesWithIcon = [
   { id: "men", label: "Men", icon: ShirtIcon },
   { id: "women", label: "Women", icon: CloudLightning },
@@ -47,35 +48,37 @@ const brandsWithIcon = [
   { id: "zara", label: "Zara", icon: Images },
   { id: "h&m", label: "H&M", icon: Heater },
 ];
+
+const banners = [bannerOne, bannerTwo, bannerThree];
+
 function ShoppingHome() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { productList, productDetails } = useSelector(
     (state) => state.shopProducts
   );
-  const { featureImageList } = useSelector((state) => state.commonFeature);
 
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
-
   const { user } = useSelector((state) => state.auth);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Navigate to listing page
   function handleNavigateToListingPage(getCurrentItem, section) {
     sessionStorage.removeItem("filters");
     const currentFilter = {
       [section]: [getCurrentItem.id],
     };
-
     sessionStorage.setItem("filters", JSON.stringify(currentFilter));
     navigate(`/shop/listing`);
   }
 
+  // Fetch product details
   function handleGetProductDetails(getCurrentProductId) {
     dispatch(fetchProductDetails(getCurrentProductId));
   }
 
+  // Add to cart functionality
   function handleAddtoCart(getCurrentProductId) {
     dispatch(
       addToCart({
@@ -93,18 +96,21 @@ function ShoppingHome() {
     });
   }
 
+  // Open product details dialog
   useEffect(() => {
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
 
+  // Slide through banners
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prevSlide) => (prevSlide + 1) % featureImageList.length);
+      setCurrentSlide((prevSlide) => (prevSlide + 1) % banners.length);
     }, 15000);
 
     return () => clearInterval(timer);
-  }, [featureImageList]);
+  }, [banners]);
 
+  // Fetch all products on component mount
   useEffect(() => {
     dispatch(
       fetchAllFilteredProducts({
@@ -114,34 +120,31 @@ function ShoppingHome() {
     );
   }, [dispatch]);
 
-  console.log(productList, "productList");
-
+  // Fetch feature images
   useEffect(() => {
     dispatch(getFeatureImages());
   }, [dispatch]);
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Banner Section */}
       <div className="relative w-full h-[600px] overflow-hidden">
-        {featureImageList && featureImageList.length > 0
-          ? featureImageList.map((slide, index) => (
-              <img
-                src={slide?.image}
-                key={index}
-                className={`${
-                  index === currentSlide ? "opacity-100" : "opacity-0"
-                } absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000`}
-              />
-            ))
-          : null}
+        {banners.map((banner, index) => (
+          <img
+            key={index}
+            src={banner}
+            className={`${
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            } absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000`}
+            alt={`Banner ${index + 1}`}
+          />
+        ))}
         <Button
           variant="outline"
           size="icon"
           onClick={() =>
             setCurrentSlide(
-              (prevSlide) =>
-                (prevSlide - 1 + featureImageList.length) %
-                featureImageList.length
+              (prevSlide) => (prevSlide - 1 + banners.length) % banners.length
             )
           }
           className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/80"
@@ -152,23 +155,24 @@ function ShoppingHome() {
           variant="outline"
           size="icon"
           onClick={() =>
-            setCurrentSlide(
-              (prevSlide) => (prevSlide + 1) % featureImageList.length
-            )
+            setCurrentSlide((prevSlide) => (prevSlide + 1) % banners.length)
           }
           className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/80"
         >
           <ChevronRightIcon className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* Categories Section */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">
-            Shop by category
+            Shop by Category
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {categoriesWithIcon.map((categoryItem) => (
               <Card
+                key={categoryItem.id}
                 onClick={() =>
                   handleNavigateToListingPage(categoryItem, "category")
                 }
@@ -184,12 +188,14 @@ function ShoppingHome() {
         </div>
       </section>
 
+      {/* Brands Section */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Shop by Brand</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {brandsWithIcon.map((brandItem) => (
               <Card
+                key={brandItem.id}
                 onClick={() => handleNavigateToListingPage(brandItem, "brand")}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
               >
@@ -203,6 +209,7 @@ function ShoppingHome() {
         </div>
       </section>
 
+      {/* Feature Products Section */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">
@@ -212,6 +219,7 @@ function ShoppingHome() {
             {productList && productList.length > 0
               ? productList.map((productItem) => (
                   <ShoppingProductTile
+                    key={productItem.id}
                     handleGetProductDetails={handleGetProductDetails}
                     product={productItem}
                     handleAddtoCart={handleAddtoCart}
@@ -221,6 +229,8 @@ function ShoppingHome() {
           </div>
         </div>
       </section>
+
+      {/* Product Details Dialog */}
       <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}
