@@ -66,16 +66,16 @@ export const addProductFormElements = [
     ],
   },
   {
-    label: "Brand",
+    label: "Look",
     name: "brand",
     componentType: "select",
     options: [
-      { id: "nike", label: "Nike" },
-      { id: "adidas", label: "Adidas" },
-      { id: "puma", label: "Puma" },
-      { id: "levi", label: "Levi's" },
-      { id: "zara", label: "Zara" },
-      { id: "h&m", label: "H&M" },
+      { id: "casual", label: "casual" },
+      { id: "Formal", label: "Formal" },
+      { id: "Party", label: "Party" },
+      { id: "Minimal", label: "Minimal" },
+      { id: "Festive", label: "Festive" },
+      { id: "Aesthetic", label: "Aesthetic" },
     ],
   },
   {
@@ -153,12 +153,12 @@ export const categoryOptionsMap = {
 };
 
 export const brandOptionsMap = {
-  nike: "Nike",
-  adidas: "Adidas",
-  puma: "Puma",
-  levi: "Levi",
-  zara: "Zara",
-  "h&m": "H&M",
+  casual: "Casual",
+  formal: "Formal",
+  party: "Party",
+  minimal: "Minimal",
+  festive: "Festive",
+  aesthetic : "Aesthetic",
 };
 
 export const filterOptions = {
@@ -170,12 +170,12 @@ export const filterOptions = {
     { id: "footwear", label: "Footwear" },
   ],
   brand: [
-    { id: "nike", label: "Nike" },
-    { id: "adidas", label: "Adidas" },
-    { id: "puma", label: "Puma" },
-    { id: "levi", label: "Levi's" },
-    { id: "zara", label: "Zara" },
-    { id: "h&m", label: "H&M" },
+    { id: "casual", label: "casual" },
+    { id: "Formal", label: "Formal" },
+    { id: "Party", label: "Party" },
+    { id: "Minimal", label: "Minimal" },
+    { id: "Festive", label: "Festive" },
+    { id: "Aesthetic", label: "Aesthetic" },
   ],
 };
 

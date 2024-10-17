@@ -3,9 +3,9 @@ import { Button } from "../ui/button";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "@/store/auth-slice";
 import PropTypes from 'prop-types';
-import UserCartWrapper from './cart-wrapper'; // Assuming the UserCartWrapper is in the correct path
+import UserCartWrapper from '../shopping-view/cart-wrapper'; // Assuming the UserCartWrapper is in the correct path
 
-function AdminHeader({ setOpen }) {
+export default function AdminHeader({ setOpen }) {
   AdminHeader.propTypes = {
     setOpen: PropTypes.func.isRequired,
   };

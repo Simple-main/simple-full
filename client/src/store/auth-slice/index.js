@@ -1,26 +1,31 @@
-
-
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 // Hardcoded admin credentials
-const adminEmail =  'admin@example.com';
-const adminPassword =  'admin123';
+const adminEmail = 'admin@example.com';
+const adminPassword = 'admin123';
 
+// Initial state
 const initialState = {
   isAuthenticated: false,
   isLoading: true,
   user: null,
+  token: null, // Add token to the state
 };
 
 export const registerUser = createAsyncThunk(
   "/auth/register",
-  async (formData) => {
+  async (formData, { getState }) => {
+    const state = getState();
+    const token = state.auth.token; // Assuming you have a token in your state
+
     const response = await axios.post(
       "http://localhost:5000/api/auth/register",
       formData,
       {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
     );
 
@@ -72,19 +77,18 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// Thunk to check authentication
 export const checkAuth = createAsyncThunk(
-  "/auth/checkauth",
-  async () => {
-    const response = await axios.get(
-      "http://localhost:5000/api/auth/check-auth",
-      {
-        withCredentials: true,
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-        },
-      }
-    );
+  "auth/checkAuth",
+  async (_, { getState }) => {
+    const state = getState();
+    const token = state.auth.token; // Get token from state
+
+    const response = await axios.get("http://localhost:5000/api/auth/check-auth", {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include token in headers
+      },
+    });
 
     return response.data;
   }
@@ -94,14 +98,18 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUser: (state, action) => {},
+    setUser(state, action) {
+      state.user = action.payload.user;
+      state.isAuthenticated = action.payload.isAuthenticated;
+      state.token = action.payload.token; // Set token in state
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
@@ -129,8 +137,8 @@ const authSlice = createSlice({
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.success ? action.payload.user : null;
-        state.isAuthenticated = action.payload.success;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
       })
       .addCase(checkAuth.rejected, (state) => {
         state.isLoading = false;
@@ -141,6 +149,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
+        state.token = null; // Clear token on logout
       });
   },
 });

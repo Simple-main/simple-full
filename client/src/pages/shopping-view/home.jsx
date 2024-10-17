@@ -41,12 +41,12 @@ const categoriesWithIcon = [
 ];
 
 const brandsWithIcon = [
-  { id: "nike", label: "Nike", icon: Shirt },
-  { id: "adidas", label: "Adidas", icon: WashingMachine },
-  { id: "puma", label: "Puma", icon: ShoppingBasket },
-  { id: "levi", label: "Levi's", icon: Airplay },
-  { id: "zara", label: "Zara", icon: Images },
-  { id: "h&m", label: "H&M", icon: Heater },
+  { id: "Casual", label: "Casual", icon: Shirt },
+  { id: "Formal", label: "Formal", icon: WashingMachine },
+  { id: "Party", label: "Party", icon: ShoppingBasket },
+  { id: "Minimal", label: "Minimal", icon: Airplay },
+  { id: "Festive", label: "Festive", icon: Images },
+  { id: "Aesthetic", label: "Aesthetic", icon: Heater },
 ];
 
 const banners = [bannerOne, bannerTwo, bannerThree];
@@ -108,7 +108,7 @@ function ShoppingHome() {
     }, 15000);
 
     return () => clearInterval(timer);
-  }, [banners]);
+  }, []);
 
   // Fetch all products on component mount
   useEffect(() => {
@@ -128,10 +128,10 @@ function ShoppingHome() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Banner Section */}
-      <div className="relative w-full h-[600px] overflow-hidden">
+      <div className="relative w-full h-[600px] overflow-hidden z-10">
         {banners.map((banner, index) => (
           <img
-            key={index}
+            key={banner} // Use banner (URL) as key, since it's unique
             src={banner}
             className={`${
               index === currentSlide ? "opacity-100" : "opacity-0"
@@ -172,7 +172,7 @@ function ShoppingHome() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {categoriesWithIcon.map((categoryItem) => (
               <Card
-                key={categoryItem.id}
+                key={categoryItem.id} // Unique key for each category
                 onClick={() =>
                   handleNavigateToListingPage(categoryItem, "category")
                 }
@@ -191,11 +191,11 @@ function ShoppingHome() {
       {/* Brands Section */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Shop by Brand</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">Shop by Look</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {brandsWithIcon.map((brandItem) => (
               <Card
-                key={brandItem.id}
+                key={brandItem.id} // Unique key for each brand
                 onClick={() => handleNavigateToListingPage(brandItem, "brand")}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
               >
@@ -219,7 +219,7 @@ function ShoppingHome() {
             {productList && productList.length > 0
               ? productList.map((productItem) => (
                   <ShoppingProductTile
-                    key={productItem.id}
+                    key={productItem.id} // Unique key for each product
                     handleGetProductDetails={handleGetProductDetails}
                     product={productItem}
                     handleAddtoCart={handleAddtoCart}

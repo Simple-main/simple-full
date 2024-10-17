@@ -25,7 +25,6 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
 
   function handleRatingChange(getRating) {
     console.log(getRating, "getRating");
-
     setRating(getRating);
   }
 
@@ -43,7 +42,6 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             title: `Only ${getQuantity} quantity can be added for this item`,
             variant: "destructive",
           });
-
           return;
         }
       }
@@ -81,12 +79,17 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
         reviewValue: rating,
       })
     ).then((data) => {
-      if (data.payload.success) {
+      if (data.payload?.success) {
         setRating(0);
         setReviewMsg("");
         dispatch(getReviews(productDetails?._id));
         toast({
           title: "Review added successfully!",
+        });
+      } else {
+        toast({
+          title: data.payload?.message || "Failed to add review. Please try again.",
+          variant: "destructive",
         });
       }
     });
@@ -94,7 +97,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
 
   useEffect(() => {
     if (productDetails !== null) dispatch(getReviews(productDetails?._id));
-  }, [productDetails]);
+  }, [productDetails, dispatch]);
 
   console.log(reviews, "reviews");
 
@@ -190,48 +193,42 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
                   </div>
                 ))
               ) : (
-                <h1>No Reviews</h1>
+                <p className="text-muted-foreground">No reviews available.</p>
               )}
             </div>
-            <div className="mt-10 flex-col flex gap-2">
-              <Label>Write a review</Label>
-              <div className="flex gap-1">
-                <StarRatingComponent
-                  rating={rating}
-                  handleRatingChange={handleRatingChange}
-                />
-              </div>
-              <Input
-                name="reviewMsg"
-                value={reviewMsg}
-                onChange={(event) => setReviewMsg(event.target.value)}
-                placeholder="Write a review..."
+          </div>
+          <Separator className="my-5" />
+          <div className="grid gap-3">
+            <h2 className="text-lg font-bold">Add Review</h2>
+            <div>
+              <Label>Rating</Label>
+              <StarRatingComponent
+                rating={rating}
+                handleRatingChange={handleRatingChange}
+                interactive={true}
               />
-              <Button
-                onClick={handleAddReview}
-                disabled={reviewMsg.trim() === ""}
-              >
-                Submit
-              </Button>
             </div>
+            <div>
+              <Label>Review</Label>
+              <Input
+                type="text"
+                placeholder="Share your experience..."
+                value={reviewMsg}
+                onChange={(e) => setReviewMsg(e.target.value)}
+              />
+            </div>
+            <Button onClick={handleAddReview}>Add Review</Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
 ProductDetailsDialog.propTypes = {
-  open: PropTypes.bool.isRequired,
-  setOpen: PropTypes.func.isRequired,
-  productDetails: PropTypes.shape({
-    _id: PropTypes.string,
-    image: PropTypes.string,
-    title: PropTypes.string,
-    description: PropTypes.string,
-    price: PropTypes.number,
-    salePrice: PropTypes.number,
-    totalStock: PropTypes.number,
-  }),
+  open: PropTypes.bool,
+  setOpen: PropTypes.func,
+  productDetails: PropTypes.object,
 };
 
 export default ProductDetailsDialog;

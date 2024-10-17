@@ -23,6 +23,7 @@ import UserCartWrapper from "./cart-wrapper";
 import { useEffect, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
+import Logo from '../../assets/text[1].jpg';
 
 function MenuItems() {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ function HeaderRightContent() {
 
   useEffect(() => {
     dispatch(fetchCartItems(user?.id));
-  }, [dispatch]);
+  }, [dispatch,user?.id]);
 
   console.log(cartItems, "sangam");
 
@@ -133,15 +134,19 @@ function HeaderRightContent() {
 }
 
 function ShoppingHeader() {
-  const { isAuthenticated } = useSelector((state) => state.auth);
-
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
+        {/* Logo Section */}
         <Link to="/shop/home" className="flex items-center gap-2">
-          <HousePlug className="h-6 w-6" />
-          <span className="font-bold">Ecommerce</span>
+          <img
+            src={Logo}
+            alt="Simple Logo"
+            className="h-10 w-auto object-contain z-0" // Adjust the size and alignment
+          />
         </Link>
+
+        {/* Mobile Menu Button */}
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="lg:hidden">
@@ -154,10 +159,13 @@ function ShoppingHeader() {
             <HeaderRightContent />
           </SheetContent>
         </Sheet>
+
+        {/* Menu Items for larger screens */}
         <div className="hidden lg:block">
           <MenuItems />
         </div>
 
+        {/* Right-side content for larger screens */}
         <div className="hidden lg:block">
           <HeaderRightContent />
         </div>
@@ -167,3 +175,4 @@ function ShoppingHeader() {
 }
 
 export default ShoppingHeader;
+

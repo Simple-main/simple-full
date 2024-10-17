@@ -4,34 +4,36 @@ const ProductReview = require("../../models/Review");
 
 const addProductReview = async (req, res) => {
   try {
-    const { productId, userId, userName, reviewMessage, reviewValue } =
-      req.body;
+    const { productId, userId, userName, reviewMessage, reviewValue } = req.body;
 
+    // Find an order where the user has bought the product and it's either confirmed or delivered
     const order = await Order.findOne({
       userId,
       "cartItems.productId": productId,
-      // orderStatus: "confirmed" || "delivered",
+      orderStatus: { $in: ["confirmed", "delivered"] },
     });
 
     if (!order) {
       return res.status(403).json({
         success: false,
-        message: "You need to purchase product to review it.",
+        message: "You need to purchase the product to review it.",
       });
     }
 
-    const checkExistinfReview = await ProductReview.findOne({
+    // Check if the user already reviewed this product
+    const existingReview = await ProductReview.findOne({
       productId,
       userId,
     });
 
-    if (checkExistinfReview) {
+    if (existingReview) {
       return res.status(400).json({
         success: false,
         message: "You already reviewed this product!",
       });
     }
 
+    // Create a new review
     const newReview = new ProductReview({
       productId,
       userId,
@@ -42,11 +44,10 @@ const addProductReview = async (req, res) => {
 
     await newReview.save();
 
+    // Recalculate the average rating for the product
     const reviews = await ProductReview.find({ productId });
     const totalReviewsLength = reviews.length;
-    const averageReview =
-      reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) /
-      totalReviewsLength;
+    const averageReview = reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) / totalReviewsLength;
 
     await Product.findByIdAndUpdate(productId, { averageReview });
 
@@ -55,7 +56,7 @@ const addProductReview = async (req, res) => {
       data: newReview,
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({
       success: false,
       message: "Error",
@@ -73,7 +74,7 @@ const getProductReviews = async (req, res) => {
       data: reviews,
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({
       success: false,
       message: "Error",
